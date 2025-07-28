@@ -40,7 +40,7 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
     if (error) {
       setError(error.message || '注册失败，请稍后重试')
     } else {
-      setSuccess('注册成功！请检查您的邮箱并验证账户。')
+      setSuccess('注册成功！请检查您的邮箱并验证账户后登录选择组织。')
     }
     
     setLoading(false)

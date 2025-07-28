@@ -2,10 +2,11 @@ import React from 'react'
 import { BrowserRouter as Router } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { AuthPage } from '@/components/Auth/AuthPage'
-import { Dashboard } from '@/components/Dashboard/Dashboard'
+import { OrganizationSelection } from '@/components/Auth/OrganizationSelection'
+import { MainDashboard } from '@/components/Dashboard/MainDashboard'
 
 function AppContent() {
-  const { session, loading, error, retry } = useAuth()
+  const { session, user, loading, error, retry, needsOrganizationSelection, completeOrganizationSelection, isGuest } = useAuth()
 
   if (loading) {
     return (
@@ -32,9 +33,19 @@ function AppContent() {
     )
   }
 
+  // 如果用户已登录但需要选择组织（游客模式跳过组织选择）
+  if (session && user && needsOrganizationSelection && !isGuest) {
+    return (
+      <OrganizationSelection 
+        userId={user.id} 
+        onComplete={completeOrganizationSelection} 
+      />
+    )
+  }
+
   return (
     <Router>
-      {session ? <Dashboard /> : <AuthPage />}
+      {(session || isGuest) ? <MainDashboard /> : <AuthPage />}
     </Router>
   )
 }

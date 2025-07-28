@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
 import { LoginForm } from './LoginForm'
 import { RegisterForm } from './RegisterForm'
-import { Bot, Sparkles } from 'lucide-react'
+import { Bot, Sparkles, UserX } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 
 export function AuthPage() {
   const [isLogin, setIsLogin] = useState(true)
+  const { enterAsGuest } = useAuth()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex items-center justify-center py-12 px-4">
@@ -88,6 +90,30 @@ export function AuthPage() {
             ) : (
               <RegisterForm onToggleMode={() => setIsLogin(true)} />
             )}
+          </div>
+          
+          {/* 游客入口 */}
+          <div className="mt-6 text-center">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-secondary-200" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-secondary-50 text-secondary-500">或者</span>
+              </div>
+            </div>
+            
+            <button
+              onClick={enterAsGuest}
+              className="mt-4 w-full max-w-md mx-auto flex items-center justify-center gap-2 px-4 py-3 border border-secondary-300 rounded-lg text-secondary-700 bg-white hover:bg-secondary-50 transition-colors"
+            >
+              <UserX className="h-5 w-5" />
+              <span className="font-medium">以游客身份浏览</span>
+            </button>
+            
+            <p className="mt-2 text-xs text-secondary-500">
+              游客模式下可以浏览公开项目，但无法参与项目协作
+            </p>
           </div>
         </div>
       </div>

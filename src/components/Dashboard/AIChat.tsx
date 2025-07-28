@@ -162,10 +162,10 @@ export function AIChat({ onClose }: AIChatProps) {
       
       setMessages(prev => [...prev, aiResponse])
 
-      // 保存聊天记录到数据库
-      if (result.success) {
-        await saveChatRecord(input.trim(), aiResponseContent, projectId)
-      }
+      // 前端不再保存聊天记录到数据库，由n8n工作流处理
+      // if (result.success) {
+      //   await saveChatRecord(input.trim(), aiResponseContent, projectId)
+      // }
     } catch (error) {
       const errorResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),

@@ -7,10 +7,14 @@ interface AuthContextType {
   user: User | null
   loading: boolean
   error: string | null
+  needsOrganizationSelection: boolean
+  isGuest: boolean
   retry: () => void
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signUp: (email: string, password: string, name: string) => Promise<{ error: any }>
   signOut: () => Promise<void>
+  enterAsGuest: () => void
+  completeOrganizationSelection: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -29,6 +33,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(false) // 改为false，避免初始loading
   const [error, setError] = useState<string | null>(null)
   const [initialized, setInitialized] = useState(false) // 添加初始化标记
+  const [needsOrganizationSelection, setNeedsOrganizationSelection] = useState(false)
+  const [isGuest, setIsGuest] = useState(false)
 
   const retry = () => {
     setError(null)
@@ -98,6 +104,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           updated_at: new Date().toISOString()
         }
         setUser(basicUser)
+        
+        // 检查是否需要组织选择
+        const orgSelectionCompleted = localStorage.getItem('orgSelectionCompleted')
+        if (!orgSelectionCompleted) {
+          setNeedsOrganizationSelection(true)
+        }
+        
         setLoading(false)
       } else if (event === 'SIGNED_OUT') {
         console.log('🚪 用户登出')
@@ -156,6 +169,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut()
     setSession(null)
     setUser(null)
+    setNeedsOrganizationSelection(false)
+    setIsGuest(false)
+  }
+
+  const enterAsGuest = () => {
+    console.log('👥 进入游客模式')
+    setIsGuest(true)
+    setSession(null)
+    setUser(null)
+    setNeedsOrganizationSelection(false)
+  }
+
+  const completeOrganizationSelection = () => {
+    setNeedsOrganizationSelection(false)
+    localStorage.setItem('orgSelectionCompleted', 'true')
   }
 
   const value = {
@@ -163,10 +191,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     loading,
     error,
+    needsOrganizationSelection,
+    isGuest,
     retry,
     signIn,
     signUp,
     signOut,
+    enterAsGuest,
+    completeOrganizationSelection,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

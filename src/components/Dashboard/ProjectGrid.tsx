@@ -1,6 +1,6 @@
 import React from 'react'
 import { Project } from '@/lib/supabase'
-import { Calendar, Users, Activity, FolderOpen, Trash2, Edit3 } from 'lucide-react'
+import { Calendar, Users, Activity, FolderOpen, Trash2, Edit3, Eye, EyeOff, UserPlus, UserX } from 'lucide-react'
 import { format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 
@@ -10,9 +10,11 @@ interface ProjectGridProps {
   onDeleteProject?: (projectId: string, projectName: string) => void
   onEditDescription?: (projectId: string, projectName: string, currentDescription: string) => void
   onProjectClick?: (project: Project) => void
+  onTogglePublic?: (projectId: string, isPublic: boolean) => void
+  onToggleRecruiting?: (projectId: string, isRecruiting: boolean) => void
 }
 
-export function ProjectGrid({ projects, onCreateProject, onDeleteProject, onEditDescription, onProjectClick }: ProjectGridProps) {
+export function ProjectGrid({ projects, onCreateProject, onDeleteProject, onEditDescription, onProjectClick, onTogglePublic, onToggleRecruiting }: ProjectGridProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -81,6 +83,51 @@ export function ProjectGrid({ projects, onCreateProject, onDeleteProject, onEdit
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
                   {getStatusText(project.status)}
                 </span>
+                {project.is_recruiting && (
+                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    招募中
+                  </span>
+                )}
+                {onTogglePublic && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onTogglePublic(project.id, !project.is_public)
+                    }}
+                    className={`p-1 rounded-md transition-colors group ${
+                      project.is_public 
+                        ? 'hover:bg-green-50 text-green-600' 
+                        : 'hover:bg-amber-50 text-amber-600'
+                    }`}
+                    title={project.is_public ? '公开项目 - 点击设为私有' : '私有项目 - 点击设为公开'}
+                  >
+                    {project.is_public ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <EyeOff className="h-4 w-4" />
+                    )}
+                  </button>
+                )}
+                {onToggleRecruiting && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onToggleRecruiting(project.id, !project.is_recruiting)
+                    }}
+                    className={`p-1 rounded-md transition-colors group ${
+                      project.is_recruiting 
+                        ? 'hover:bg-green-50 text-green-600' 
+                        : 'hover:bg-secondary-50 text-secondary-600'
+                    }`}
+                    title={project.is_recruiting ? '招募中 - 点击关闭招募' : '未招募 - 点击开启招募'}
+                  >
+                    {project.is_recruiting ? (
+                      <UserPlus className="h-4 w-4" />
+                    ) : (
+                      <UserX className="h-4 w-4" />
+                    )}
+                  </button>
+                )}
                 {onEditDescription && (
                   <button
                     onClick={(e) => {

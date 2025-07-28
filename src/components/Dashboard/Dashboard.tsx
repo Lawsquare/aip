@@ -7,7 +7,7 @@ import { TaskList } from './TaskList'
 import { AIChat } from './AIChat'
 import { CreateProjectModal } from './CreateProjectModal'
 import { EditDescriptionModal } from './EditDescriptionModal'
-import { ProjectDetailPanel } from './ProjectDetailPanel'
+import { ProjectDetailPage } from './ProjectDetailPage'
 import { Plus, MessageSquare } from 'lucide-react'
 
 export function Dashboard() {
@@ -241,6 +241,67 @@ export function Dashboard() {
     setShowProjectDetail(true)
   }
 
+  const handleBackToProjects = () => {
+    setShowProjectDetail(false)
+    setSelectedProject(null)
+  }
+
+  const handleTogglePublic = async (projectId: string, isPublic: boolean) => {
+    if (!user) return
+
+    try {
+      console.log('🔄 切换项目可见性:', projectId, isPublic ? '公开' : '私有')
+      
+      const { error } = await supabase
+        .from('projects')
+        .update({ is_public: isPublic })
+        .eq('id', projectId)
+        .eq('creator_id', user.id) // 确保只能修改自己的项目
+
+      if (error) {
+        console.error('❌ 切换项目可见性失败:', error)
+        throw error
+      }
+
+      console.log('✅ 项目可见性切换成功！')
+      
+      // 重新加载数据
+      await loadDashboardData()
+      
+    } catch (error) {
+      console.error('❌ 切换项目可见性失败:', error)
+      alert('切换项目可见性失败，请重试')
+    }
+  }
+
+  const handleToggleRecruiting = async (projectId: string, isRecruiting: boolean) => {
+    if (!user) return
+
+    try {
+      console.log('🔄 切换项目招募状态:', projectId, isRecruiting ? '招募中' : '停止招募')
+      
+      const { error } = await supabase
+        .from('projects')
+        .update({ is_recruiting: isRecruiting })
+        .eq('id', projectId)
+        .eq('creator_id', user.id) // 确保只能修改自己的项目
+
+      if (error) {
+        console.error('❌ 切换项目招募状态失败:', error)
+        throw error
+      }
+
+      console.log('✅ 项目招募状态切换成功！')
+      
+      // 重新加载数据
+      await loadDashboardData()
+      
+    } catch (error) {
+      console.error('❌ 切换项目招募状态失败:', error)
+      alert('切换项目招募状态失败，请重试')
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-secondary-50 flex items-center justify-center">
@@ -257,52 +318,63 @@ export function Dashboard() {
       {/* 主内容区 */}
       <div className="flex-1 lg:ml-64">
         <div className="p-6">
-          {/* 页头 */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-secondary-900 mb-2">
-              欢迎回来，{user?.name || '用户'}！
-            </h1>
-            <p className="text-secondary-600">
-              您有 {myTasks.length} 个待处理任务，{projects.length} 个活跃项目
-            </p>
-          </div>
+          {showProjectDetail && selectedProject ? (
+            <ProjectDetailPage 
+              project={selectedProject}
+              onBack={handleBackToProjects}
+            />
+          ) : (
+            <>
+              {/* 页头 */}
+              <div className="mb-8">
+                <h1 className="text-3xl font-bold text-secondary-900 mb-2">
+                  欢迎回来，{user?.name || '用户'}！
+                </h1>
+                <p className="text-secondary-600">
+                  您有 {myTasks.length} 个待处理任务，{projects.length} 个活跃项目
+                </p>
+              </div>
 
-          {/* 快速操作按钮 */}
-          <div className="flex flex-wrap gap-4 mb-8">
-            <button 
-              onClick={() => setShowCreateProject(true)}
-              className="btn-primary flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              创建项目
-            </button>
-            <button 
-              onClick={() => setShowAIChat(true)}
-              className="btn-secondary flex items-center gap-2"
-            >
-              <MessageSquare className="h-4 w-4" />
-              与AI对话
-            </button>
-          </div>
+              {/* 快速操作按钮 */}
+              <div className="flex flex-wrap gap-4 mb-8">
+                <button 
+                  onClick={() => setShowCreateProject(true)}
+                  className="btn-primary flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  创建项目
+                </button>
+                <button 
+                  onClick={() => setShowAIChat(true)}
+                  className="btn-secondary flex items-center gap-2"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  与AI对话
+                </button>
+              </div>
 
-          {/* 主要内容网格 */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            {/* 我的任务 */}
-            <div className="xl:col-span-1">
-              <TaskList tasks={myTasks} onTaskUpdate={loadDashboardData} />
-            </div>
-            
-            {/* 我的项目 */}
-            <div className="xl:col-span-2">
-              <ProjectGrid 
-                projects={projects} 
-                onCreateProject={() => setShowCreateProject(true)}
-                onDeleteProject={handleDeleteProject}
-                onEditDescription={handleEditDescription}
-                onProjectClick={handleProjectClick}
-              />
-            </div>
-          </div>
+              {/* 主要内容网格 */}
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                {/* 我的任务 */}
+                <div className="xl:col-span-1">
+                  <TaskList tasks={myTasks} onTaskUpdate={loadDashboardData} />
+                </div>
+                
+                {/* 我的项目 */}
+                <div className="xl:col-span-2">
+                  <ProjectGrid 
+                    projects={projects} 
+                    onCreateProject={() => setShowCreateProject(true)}
+                    onDeleteProject={handleDeleteProject}
+                    onEditDescription={handleEditDescription}
+                    onProjectClick={handleProjectClick}
+                    onTogglePublic={handleTogglePublic}
+                    onToggleRecruiting={handleToggleRecruiting}
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -334,17 +406,6 @@ export function Dashboard() {
         />
       )}
 
-      {/* 项目详情面板 */}
-      {showProjectDetail && selectedProject && (
-        <ProjectDetailPanel
-          isOpen={showProjectDetail}
-          onClose={() => {
-            setShowProjectDetail(false)
-            setSelectedProject(null)
-          }}
-          project={selectedProject}
-        />
-      )}
     </div>
   )
 } 
